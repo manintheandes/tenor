@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Product Survey</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 20px;
+    text-align: center;
+    color: #333;
+  }
+  h1 { font-size: 24px; margin-bottom: 16px; }
+  p { font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 32px; }
+  a.btn {
+    display: inline-block;
+    background: #1a1a2e;
+    color: white;
+    padding: 16px 48px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  a.btn:hover { background: #2e2e4a; }
+  .note { font-size: 13px; color: #999; margin-top: 24px; }
+</style>
+<script>
+  // Replace these URLs with your actual Typeform form URLs.
+  // Add or remove entries to match your number of conditions.
+  var surveys = [
+    "https://form.typeform.com/to/REPLACE_FORM_ID_1", // Condition 1 (e.g., Control)
+    "https://form.typeform.com/to/REPLACE_FORM_ID_2", // Condition 2 (e.g., Treatment A)
+    "https://form.typeform.com/to/REPLACE_FORM_ID_3"  // Condition 3 (e.g., Treatment B)
+  ];
+
+  function start() {
+    var index = Math.floor(Math.random() * surveys.length);
+    var url = surveys[index];
+    // Forward Prolific URL parameters to Typeform as hidden fields
+    var params = new URLSearchParams(window.location.search);
+    var pid = params.get("PROLIFIC_PID") || "";
+    var studyId = params.get("STUDY_ID") || "";
+    var sessionId = params.get("SESSION_ID") || "";
+    var sep = url.indexOf("?") === -1 ? "?" : "&";
+    url += sep + "prolific_pid=" + encodeURIComponent(pid)
+        + "&study_id=" + encodeURIComponent(studyId)
+        + "&session_id=" + encodeURIComponent(sessionId);
+    window.location.href = url;
+  }
+</script>
+</head>
+<body>
+<h1>Food Product Survey</h1>
+<p>
+  We are studying how consumers think about food products and where they come
+  from. This takes about 10 to 15 minutes. There are no right or wrong answers.
+</p>
+<a class="btn" href="#" onclick="start(); return false;">Begin Survey</a>
+<p class="note">You must be a US resident aged 25-65 who shops for groceries.</p>
+</body>
+</html>
