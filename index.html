@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenor — The Human Response Dataset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #080808;
+    --bg-raised: #0e0e0e;
+    --bg-card: #141414;
+    --border: #1c1c1c;
+    --border-h: #282826;
+    --text: #ededec;
+    --text-2: #9b9b97;
+    --text-3: #5c5c58;
+    --accent: #d4a574;
+    --teal: #5ae6de;
+    --teal-dim: rgba(90,230,222,0.08);
+    --teal-border: rgba(90,230,222,0.2);
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --serif: 'Newsreader', Georgia, serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--text);
+    line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--teal); color: var(--bg); }
+  mark { background: var(--teal); color: var(--bg); padding: 0.05em 0.2em; border-radius: 2px; }
+
+  /* subtle grain */
+  body::after {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+    opacity:0.02;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 2.5rem; height: 52px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(8,8,8,0.8); backdrop-filter: blur(16px) saturate(1.8);
+    border-bottom: 1px solid transparent; transition: border-color 0.3s;
+  }
+  nav.scrolled { border-bottom-color: var(--border); }
+  .nav-left { display: flex; align-items: center; gap: 2.5rem; }
+  .nav-logo {
+    color: var(--text); text-decoration: none;
+    display: flex; align-items: center;
+  }
+  .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--text-2); text-decoration: none; font-size: 0.8rem;
+    font-weight: 500; transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 1.25rem; }
+  .nav-btn {
+    font-size: 0.8rem; font-weight: 500; font-family: var(--sans);
+    padding: 0.35rem 0.9rem; border-radius: 5px; text-decoration: none;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .nav-ghost { color: var(--text-2); background: none; border: none; }
+  .nav-ghost:hover { color: var(--text); }
+  .nav-solid {
+    color: var(--bg); background: var(--text); border: 1px solid var(--text);
+  }
+  .nav-solid:hover { background: #d4d4d3; }
+
+  /* HERO */
+  .hero { padding: 9rem 3rem 0; max-width: 1100px; margin: 0 auto; }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.6rem, 5vw, 3.8rem); font-weight: 400;
+    line-height: 1.15; letter-spacing: -0.01em; max-width: 780px;
+  }
+  .hero h1 .hl {
+    background: rgba(90,230,222,0.12);
+    padding: 0.05em 0.15em;
+    margin: 0 -0.15em;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    opacity: 0; transform: translateY(20px); animation: fadeUp 0.7s 0.15s forwards;
+  }
+  .hero h1 span { color: var(--text-2); }
+  .hero-sub {
+    margin-top: 1.25rem; font-size: 0.95rem; color: var(--text-2);
+    line-height: 1.7; max-width: 500px;
+    opacity: 0; transform: translateY(15px); animation: fadeUp 0.7s 0.35s forwards;
+  }
+  .hero-announce {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    margin-top: 1.5rem; font-size: 0.82rem;
+    opacity: 0; transform: translateY(10px); animation: fadeUp 0.7s 0.5s forwards;
+  }
+  .hero-announce .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--teal);
+    box-shadow: 0 0 8px var(--teal);
+  }
+  .hero-announce strong { color: var(--text); font-weight: 600; }
+  .hero-announce a { color: var(--text-2); text-decoration: none; }
+  .hero-announce a:hover { color: var(--text); }
+
+  /* CORPUS EXPLORER */
+  .explorer-wrap {
+    margin: 3.5rem auto 0; padding: 0 3rem; max-width: 1200px;
+    opacity: 0; transform: translateY(30px); animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .explorer {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; display: grid; grid-template-columns: 200px 1fr;
+    min-height: 480px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+
+  /* Sidebar */
+  .ex-side {
+    background: var(--bg-raised); border-right: 1px solid var(--border);
+    font-size: 0.78rem; display: flex; flex-direction: column;
+  }
+  .ex-side-head {
+    padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.5rem; font-weight: 600;
+    font-size: 0.78rem;
+  }
+  .ex-side-head svg { width: 14px; height: 14px; color: var(--teal); }
+  .ex-side-head .live {
+    margin-left: auto; font-family: var(--mono); font-size: 0.58rem;
+    color: var(--teal); background: var(--teal-dim); padding: 0.1rem 0.35rem;
+    border-radius: 3px; letter-spacing: 0.04em;
+  }
+  .ex-tab {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1.1rem; color: var(--text-2); cursor: pointer;
+    border: none; background: none; width: 100%; text-align: left;
+    font-family: var(--sans); font-size: 0.78rem; transition: all 0.1s;
+  }
+  .ex-tab:hover { color: var(--text); background: rgba(255,255,255,0.025); }
+  .ex-tab.active { color: var(--text); background: rgba(255,255,255,0.04); }
+  .ex-tab svg { width: 13px; height: 13px; color: var(--text-3); flex-shrink: 0; }
+  .ex-tab.active svg { color: var(--text-2); }
+  .ex-tab .n { margin-left: auto; font-family: var(--mono); font-size: 0.62rem; color: var(--text-3); }
+  .ex-section {
+    font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-3); padding: 0.9rem 1.1rem 0.35rem; font-weight: 500;
+  }
+  .ex-filt {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.35rem 1.1rem; font-size: 0.72rem; color: var(--text-3);
+    cursor: pointer; border: none; background: none; width: 100%;
+    text-align: left; font-family: var(--sans); transition: color 0.1s;
+  }
+  .ex-filt:hover { color: var(--text-2); }
+  .ex-filt.active { color: var(--text); }
+  .ex-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Main */
+  .ex-main { display: flex; flex-direction: column; overflow: hidden; }
+  .ex-bar {
+    padding: 0.6rem 1.1rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.75rem; color: var(--text-2);
+  }
+  .ex-search {
+    background: rgba(255,255,255,0.035); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.3rem 0.65rem; font-size: 0.73rem;
+    color: var(--text); font-family: var(--sans); outline: none; width: 190px;
+    transition: border-color 0.15s;
+  }
+  .ex-search:focus { border-color: var(--teal-border); }
+  .ex-search::placeholder { color: var(--text-3); }
+  .ex-bar-right { margin-left: auto; display: flex; gap: 0.5rem; }
+  .ex-pill {
+    font-family: var(--mono); font-size: 0.6rem; padding: 0.15rem 0.45rem;
+    border: 1px solid var(--border); border-radius: 3px; color: var(--text-3);
+  }
+  .ex-pill.accent { color: var(--teal); border-color: var(--teal-border); }
+
+  /* Table */
+  .ex-table { flex: 1; overflow-y: auto; }
+  .ex-row {
+    display: grid;
+    grid-template-columns: 2.5rem 1.4fr 1.5fr 0.8fr 0.55fr 0.55fr 0.45fr;
+    border-bottom: 1px solid var(--border); font-size: 0.73rem;
+    cursor: pointer; transition: background 0.08s;
+  }
+  .ex-row:hover { background: rgba(255,255,255,0.018); }
+  .ex-row.on { background: var(--teal-dim); }
+  .ex-row.hd {
+    font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-3); font-weight: 500; cursor: default;
+    position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+  }
+  .ex-row.hd:hover { background: var(--bg-card); }
+  .ex-c { padding: 0.55rem 0.65rem; display: flex; align-items: center; overflow: hidden; }
+  .c-id { color: var(--text-3); font-family: var(--mono); font-size: 0.65rem; }
+  .c-stim { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 0.35rem; }
+  .c-resp { color: var(--text); }
+  .c-demo { color: var(--text-3); font-family: var(--mono); font-size: 0.63rem; }
+  .c-test { color: var(--teal); font-family: var(--mono); font-size: 0.65rem; }
+  .c-p { font-family: var(--mono); font-size: 0.65rem; }
+  .c-sig { font-weight: 600; color: var(--teal); }
+  .c-ns { color: var(--text-3); }
+  .c-fx { font-family: var(--mono); font-size: 0.63rem; color: var(--text-2); }
+  .badge {
+    font-family: var(--mono); font-size: 0.55rem; padding: 0.08rem 0.3rem;
+    border-radius: 2px; white-space: nowrap; font-weight: 500;
+  }
+  .b-ctrl { background: rgba(255,255,255,0.05); color: var(--text-3); }
+  .b-bee { background: var(--teal-dim); color: var(--teal); }
+  .b-poll { background: rgba(212,165,116,0.1); color: var(--accent); }
+  .b-dist { background: rgba(255,255,255,0.03); color: var(--text-3); }
+  .ex-more {
+    text-align: center; padding: 0.7rem; color: var(--text-3);
+    font-family: var(--mono); font-size: 0.62rem;
+  }
+  .ex-more a { color: var(--teal); text-decoration: none; }
+  .ex-more a:hover { text-decoration: underline; }
+
+  /* Detail */
+  .ex-detail {
+    border-top: 1px solid var(--border); padding: 1rem;
+    background: var(--bg-raised); display: none;
+  }
+  .ex-detail.open { display: block; }
+  .ex-detail-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.6rem;
+  }
+  .ex-detail-title { font-size: 0.78rem; font-weight: 600; }
+  .ex-detail-x {
+    background: none; border: none; color: var(--text-3); cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .ex-detail-x:hover { color: var(--text); }
+  .ex-detail-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 0.5rem;
+  }
+  .ex-field {
+    padding: 0.6rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .ex-field-label {
+    font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 0.15rem;
+  }
+  .ex-field-val { font-size: 0.78rem; }
+  .ex-field-val.m { font-family: var(--mono); font-size: 0.73rem; }
+
+  /* Tests view */
+  .ex-tests { display: none; flex: 1; overflow-y: auto; padding: 1rem; }
+  .ex-tests.active { display: block; }
+  .t-card { border: 1px solid var(--border); border-radius: 5px; margin-bottom: 0.65rem; overflow: hidden; }
+  .t-card-top {
+    padding: 0.7rem 1rem; display: flex; justify-content: space-between;
+    align-items: center; background: rgba(255,255,255,0.015);
+    border-bottom: 1px solid var(--border);
+  }
+  .t-card-name { font-size: 0.8rem; font-weight: 600; }
+  .t-badge { font-family: var(--mono); font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 3px; }
+  .t-sig { background: var(--teal-dim); color: var(--teal); }
+  .t-nsig { background: rgba(255,255,255,0.04); color: var(--text-3); }
+  .t-card-body { padding: 0.6rem 1rem; }
+  .t-row {
+    display: flex; justify-content: space-between; padding: 0.3rem 0;
+    font-size: 0.73rem; border-bottom: 1px solid var(--border);
+  }
+  .t-row:last-child { border-bottom: none; }
+  .t-label { color: var(--text-2); }
+  .t-val { font-family: var(--mono); color: var(--text); }
+
+  /* Stimuli view */
+  .ex-stim { display: none; flex: 1; overflow-y: auto; padding: 1rem; }
+  .ex-stim.active { display: block; }
+  .stim-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 0.65rem; }
+  .stim-card { border: 1px solid var(--border); border-radius: 5px; overflow: hidden; transition: border-color 0.15s; }
+  .stim-card:hover { border-color: var(--border-h); }
+  .stim-img {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; background: rgba(255,255,255,0.02);
+  }
+  .stim-info { padding: 0.8rem; }
+  .stim-name { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .stim-desc { font-size: 0.68rem; color: var(--text-3); line-height: 1.4; }
+
+  /* SECTIONS */
+  section { padding: 6rem 3rem; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .divider { border-top: 1px solid var(--border); max-width: 1100px; margin: 0 auto; }
+
+  /* GAP */
+  .gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+  .gap-left h2 {
+    font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 400;
+    letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 1rem;
+  }
+  .gap-left p { font-size: 0.92rem; color: var(--text-2); line-height: 1.65; }
+  .gap-left p + p { margin-top: 0.75rem; }
+  .gap-left strong { color: var(--text); }
+  .gap-right { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .gap-item { padding: 1.1rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.75rem; }
+  .gap-item:last-child { border-bottom: none; }
+  .gap-mark { font-family: var(--mono); font-size: 0.68rem; color: var(--text-3); min-width: 1.2rem; padding-top: 0.1rem; }
+  .gap-item h4 { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.15rem; }
+  .gap-item p { font-size: 0.78rem; color: var(--text-2); line-height: 1.45; }
+
+  /* HOW */
+  .how-head h2 {
+    font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 400;
+    letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.5rem;
+  }
+  .how-head h2 span { color: var(--text-2); }
+  .how-head p { font-size: 0.92rem; color: var(--text-2); max-width: 500px; margin-bottom: 2rem; }
+  .how-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden; counter-reset: ph;
+  }
+  .ph { background: var(--bg); padding: 1.5rem; counter-increment: ph; transition: background 0.15s; }
+  .ph:hover { background: var(--bg-raised); }
+  .ph-n { font-family: var(--mono); font-size: 0.62rem; color: var(--text-3); margin-bottom: 0.5rem; }
+  .ph-n::before { content: counter(ph, decimal-leading-zero); }
+  .ph h3 { font-family: var(--serif); font-size: 0.9rem; font-weight: 500; margin-bottom: 0.3rem; }
+  .ph p { font-size: 0.75rem; color: var(--text-2); line-height: 1.5; }
+
+  /* METHODOLOGY */
+  .meth-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 4rem; align-items: start; }
+  .meth-left { position: sticky; top: 5rem; }
+  .meth-left h2 {
+    font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 400;
+    letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.75rem;
+  }
+  .meth-left p { font-size: 0.92rem; color: var(--text-2); line-height: 1.65; }
+  .rules { list-style: none; }
+  .rule {
+    padding: 0.8rem 0; border-bottom: 1px solid var(--border);
+    display: flex; gap: 0.65rem; align-items: baseline; font-size: 0.82rem;
+  }
+  .rule:first-child { border-top: 1px solid var(--border); }
+  .rule-n { font-family: var(--mono); font-size: 0.6rem; color: var(--text-3); min-width: 1.2rem; }
+  .rule strong { font-weight: 600; }
+  .rule span { color: var(--text-2); }
+
+  /* INSTALL */
+  .inst { text-align: center; }
+  .inst h2 {
+    font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 400;
+    letter-spacing: -0.01em; max-width: 520px; margin: 0 auto 0.6rem;
+  }
+  .inst > p {
+    color: var(--text-2); font-size: 0.9rem; max-width: 440px;
+    margin: 0 auto 1.75rem; line-height: 1.6;
+  }
+  .inst-block {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem 1.25rem; font-family: var(--mono); font-size: 0.75rem;
+    text-align: left; max-width: 500px; margin: 0 auto 1.25rem;
+    color: var(--text-2); position: relative;
+  }
+  .inst-block code { color: var(--text); }
+  .inst-block .cm { color: var(--text-3); }
+  .cp-btn {
+    position: absolute; top: 0.65rem; right: 0.65rem;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-3); padding: 0.2rem 0.55rem; border-radius: 3px;
+    font-family: var(--mono); font-size: 0.6rem; cursor: pointer;
+  }
+  .cp-btn:hover { border-color: var(--text-3); color: var(--text-2); }
+  .inst-btns { display: flex; justify-content: center; gap: 0.65rem; }
+  .btn {
+    font-family: var(--sans); font-size: 0.82rem; font-weight: 500;
+    padding: 0.55rem 1.3rem; border-radius: 5px; text-decoration: none;
+    transition: all 0.15s; cursor: pointer; border: none;
+  }
+  .btn-w { background: var(--teal); color: var(--bg); }
+  .btn-w:hover { opacity: 0.85; }
+  .btn-o { background: none; color: var(--text-2); border: 1px solid var(--border); }
+  .btn-o:hover { border-color: var(--teal-border); color: var(--teal); }
+
+  footer {
+    padding: 2rem 3rem; border-top: 1px solid var(--border);
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo-mark { height: 28px; width: auto; }
+  .footer-left { font-size: 0.78rem; color: var(--text-3); }
+  .footer-links { display: flex; gap: 1.25rem; list-style: none; }
+  .footer-links a { color: var(--text-3); text-decoration: none; font-size: 0.78rem; }
+  .footer-links a:hover { color: var(--text-2); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .reveal { opacity:0; transform:translateY(20px); transition: opacity .5s, transform .5s; }
+  .reveal.vis { opacity:1; transform:translateY(0); }
+
+  @media(max-width:900px){
+    .explorer{grid-template-columns:1fr} .ex-side{display:none}
+    .ex-row{grid-template-columns:2rem 1fr 1fr .5fr}
+    .ex-row .c-demo,.ex-row .c-test,.ex-row .c-fx{display:none}
+    .gap-grid,.meth-grid{grid-template-columns:1fr;gap:2rem}
+    .meth-left{position:static}
+    .how-strip{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:600px){
+    nav{padding:0 1.5rem} .nav-links{display:none}
+    .hero,.explorer-wrap{padding-left:1.5rem;padding-right:1.5rem}
+    section{padding:4rem 1.5rem}
+    .how-strip{grid-template-columns:1fr}
+    .footer-inner{flex-direction:column;gap:1rem}
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="#" class="nav-logo"><svg class="logo-mark" viewBox="0 0 130 36" fill="none"><text x="0" y="28" fill="var(--text)" font-family="'Newsreader', serif" font-size="30" font-weight="500" letter-spacing="1">Tenor</text><path d="M115 28c3 2 5 2 7 0s5-2 7 0 5 2 7 0" stroke="var(--teal)" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></a>
+    <ul class="nav-links">
+      <li><a href="#gap">The Gap</a></li>
+      <li><a href="#how">Pipeline</a></li>
+      <li><a href="#meth">Methodology</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <a href="https://doi.org/10.17605/OSF.IO/73NJW" target="_blank" class="nav-btn nav-ghost">Read the study</a>
+    <a href="#install" class="nav-btn nav-solid">Contribute</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>Teaching AI what <span style="color:var(--teal)">humans</span> actually think.</h1>
+  <p class="hero-sub">AI has no grounding in how real people perceive and respond. Tenor is an open dataset of structured human responses with enforced methodology.</p>
+  <div class="hero-announce">
+    <span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse 2.5s infinite"></span>
+    <strong>First study published</strong>
+    <a href="https://doi.org/10.17605/OSF.IO/73NJW" target="_blank">1,027 respondents &middot; CC-BY 4.0 &rarr;</a>
+  </div>
+</section>
+
+<!-- CORPUS EXPLORER -->
+<div class="explorer-wrap">
+<div class="explorer" id="corpus">
+  <div class="ex-side">
+    <div class="ex-side-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span>Corpus</span>
+      <span class="live">LIVE</span>
+    </div>
+    <button class="ex-tab active" data-view="responses">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      Responses <span class="n">1,027</span>
+    </button>
+    <button class="ex-tab" data-view="tests">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Tests <span class="n">12</span>
+    </button>
+    <button class="ex-tab" data-view="stimuli">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Stimuli <span class="n">5</span>
+    </button>
+    <div class="ex-section">Conditions</div>
+    <button class="ex-filt active" data-condition="all"><span class="ex-dot" style="background:var(--text-2)"></span>All</button>
+    <button class="ex-filt" data-condition="control"><span class="ex-dot" style="background:#555"></span>Control</button>
+    <button class="ex-filt" data-condition="bee"><span class="ex-dot" style="background:var(--teal)"></span>Bee seal</button>
+    <button class="ex-filt" data-condition="pollinator"><span class="ex-dot" style="background:var(--accent)"></span>Pollinator</button>
+    <div class="ex-section">Products</div>
+    <button class="ex-filt active" data-product="all"><span class="ex-dot" style="background:var(--text-2)"></span>All</button>
+    <button class="ex-filt" data-product="blueberries"><span class="ex-dot" style="background:#6b8cff"></span>Blueberries</button>
+    <button class="ex-filt" data-product="oreo"><span class="ex-dot" style="background:#666"></span>Oreo</button>
+    <button class="ex-filt" data-product="huel"><span class="ex-dot" style="background:#8b7355"></span>Huel</button>
+  </div>
+  <div class="ex-main">
+    <div class="ex-bar">
+      <input type="text" class="ex-search" placeholder="Search responses..." id="search">
+      <div class="ex-bar-right">
+        <span class="ex-pill">Gateway Study</span>
+        <span class="ex-pill">n=1,027</span>
+        <span class="ex-pill accent">CC-BY 4.0</span>
+      </div>
+    </div>
+    <div class="ex-table" id="resp-view">
+      <div class="ex-row hd">
+        <div class="ex-c">#</div><div class="ex-c">Stimulus</div><div class="ex-c">Unprompted</div>
+        <div class="ex-c">Demo</div><div class="ex-c">Test</div><div class="ex-c">p</div><div class="ex-c">Effect</div>
+      </div>
+    </div>
+    <div class="ex-tests" id="tests-view"></div>
+    <div class="ex-stim" id="stim-view"></div>
+    <div class="ex-detail" id="detail">
+      <div class="ex-detail-head">
+        <div class="ex-detail-title" id="d-title"></div>
+        <button class="ex-detail-x" id="d-close">&times;</button>
+      </div>
+      <div class="ex-detail-grid" id="d-grid"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="divider" style="margin-top:6rem"></div>
+
+<!-- GAP -->
+<section id="gap">
+  <div class="section-inner">
+    <div class="gap-grid reveal">
+      <div class="gap-left">
+        <h2>The data doesn't exist on the internet</h2>
+        <p>There is almost no high-quality, open data on what <mark>real humans think</mark> when they look at a product. That data lives in proprietary databases locked inside CPG companies and research firms.</p>
+        <p><strong>LLM judges guessing what a persona would say is not ground truth.</strong> Tenor fills the gap between simulation and reality.</p>
+      </div>
+      <div class="gap-right">
+        <div class="gap-item"><span class="gap-mark">&times;</span><div><h4>Internet text</h4><p>No controlled stimuli. No methodology. No statistical ground truth.</p></div></div>
+        <div class="gap-item"><span class="gap-mark">&times;</span><div><h4>LLM judges</h4><p>Synthetic personas guessing. No image grounding. Untethered from real cognition.</p></div></div>
+        <div class="gap-item"><span class="gap-mark">&times;</span><div><h4>Proprietary research</h4><p>Real data. $40K per study. NDAs. Never aggregated. Never open.</p></div></div>
+        <div class="gap-item"><span class="gap-mark" style="color:var(--teal)">&#10003;</span><div><h4 style="color:var(--teal)">Tenor corpus</h4><p>Real humans. Controlled stimuli. Enforced methodology. Open. Growing.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW -->
+<section id="how">
+  <div class="section-inner">
+    <div class="how-head reveal">
+      <h2>The skill generates the data <span>Open source is the growth engine</span></h2>
+      <p>An AI agent skill that runs rigorous consumer studies in one day for $4,000. Every study deposits structured data on OSF.</p>
+    </div>
+    <div class="how-strip reveal">
+      <div class="ph"><div class="ph-n"></div><h3>Structure</h3><p>Research question, variables, hypotheses, distractors.</p></div>
+      <div class="ph"><div class="ph-n"></div><h3>Build &amp; Pre-test</h3><p>Survey, stimuli, 100 LLM judges before real money.</p></div>
+      <div class="ph"><div class="ph-n"></div><h3>Launch &amp; Analyze</h3><p>Prolific, chi-square, Mann-Whitney U, distractor validation.</p></div>
+      <div class="ph"><div class="ph-n"></div><h3>Publish &amp; Deposit</h3><p>Report, OSF, DOI. Into the corpus.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- METHODOLOGY -->
+<section id="meth">
+  <div class="section-inner">
+    <div class="meth-grid">
+      <div class="meth-left reveal">
+        <h2>Why the data is credible</h2>
+        <p>Nine non-negotiable rules on every study. This is what separates Tenor data from survey noise.</p>
+      </div>
+      <ul class="rules reveal">
+        <li class="rule"><span class="rule-n">01</span><strong>Between-subjects only.</strong> <span>One condition per participant.</span></li>
+        <li class="rule"><span class="rule-n">02</span><strong>Distractor products.</strong> <span>Minimum two, identical questions.</span></li>
+        <li class="rule"><span class="rule-n">03</span><strong>Unprompted before prompted.</strong> <span>Associations before any hint.</span></li>
+        <li class="rule"><span class="rule-n">04</span><strong>Balanced options.</strong> <span>No anchoring through asymmetry.</span></li>
+        <li class="rule"><span class="rule-n">05</span><strong>No leading language.</strong> <span>Flagged and rewritten.</span></li>
+        <li class="rule"><span class="rule-n">06</span><strong>Stats on every comparison.</strong> <span>Stat, p-value, effect size.</span></li>
+        <li class="rule"><span class="rule-n">07</span><strong>Distractor validation.</strong> <span>No cross-condition differences.</span></li>
+        <li class="rule"><span class="rule-n">08</span><strong>Limitations required.</strong> <span>Minimum four.</span></li>
+        <li class="rule"><span class="rule-n">09</span><strong>Open data default.</strong> <span>OSF + DOI in the pipeline.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- INSTALL -->
+<section class="inst" id="install">
+  <div class="section-inner">
+    <h2 class="reveal">Run a study. Grow the <span style="color:var(--teal)">corpus</span>.</h2>
+    <div class="inst-block reveal">
+      <button class="cp-btn" onclick="copyI()">Copy</button>
+      <span class="cm"># Install</span><br>
+      <code>git clone https://github.com/manintheandes/tenor \<br>&nbsp; ~/.claude/skills/tenor</code>
+    </div>
+    <div class="inst-btns reveal">
+      <a href="https://github.com/manintheandes/tenor" target="_blank" class="btn btn-w">GitHub</a>
+      <a href="https://osf.io/73njw/" target="_blank" class="btn btn-o">Browse corpus</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">Tenor</div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/manintheandes/tenor">GitHub</a></li>
+      <li><a href="https://osf.io/73njw/">OSF</a></li>
+      <li><a href="https://doi.org/10.17605/OSF.IO/73NJW">DOI</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+const D=[
+  {id:'001',stim:'Blueberries + bee seal',cond:'bee',prod:'blueberries',resp:'"Impact on animals"',demo:'F, 34, Midwest',age:34,gender:'F',region:'Midwest',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.50 more',ec:4},
+  {id:'002',stim:'Blueberries + no seal',cond:'control',prod:'blueberries',resp:'"Taste/flavor"',demo:'M, 28, South',age:28,gender:'M',region:'South',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:3,wtp:'$0.00',ec:3},
+  {id:'003',stim:'Blueberries + pollinator',cond:'pollinator',prod:'blueberries',resp:'"Environmental impact"',demo:'F, 41, West',age:41,gender:'F',region:'West',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.75 more',ec:5},
+  {id:'004',stim:'Blueberries + bee seal',cond:'bee',prod:'blueberries',resp:'"Health benefits"',demo:'M, 52, NE',age:52,gender:'M',region:'Northeast',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:5,wtp:'$1.00 more',ec:4},
+  {id:'005',stim:'Blueberries + no seal',cond:'control',prod:'blueberries',resp:'"Price/value"',demo:'F, 19, South',age:19,gender:'F',region:'South',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:3,wtp:'$0.00',ec:2},
+  {id:'006',stim:'Blueberries + pollinator',cond:'pollinator',prod:'blueberries',resp:'"Impact on animals"',demo:'M, 37, West',age:37,gender:'M',region:'West',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.50 more',ec:4},
+  {id:'007',stim:'Blueberries + bee seal',cond:'bee',prod:'blueberries',resp:'"Food safety"',demo:'F, 45, Midwest',age:45,gender:'F',region:'Midwest',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.25 more',ec:3},
+  {id:'008',stim:'Oreo (distractor)',cond:'control',prod:'oreo',resp:'"Taste/flavor"',demo:'M, 31, NE',age:31,gender:'M',region:'Northeast',test:'\u03C7\u00B2',p:.847,fx:'V=0.02',sig:0,pi:4,wtp:'$0.00',ec:2},
+  {id:'009',stim:'Oreo (distractor)',cond:'bee',prod:'oreo',resp:'"Taste/flavor"',demo:'F, 26, South',age:26,gender:'F',region:'South',test:'\u03C7\u00B2',p:.847,fx:'V=0.02',sig:0,pi:3,wtp:'$0.00',ec:2},
+  {id:'010',stim:'Oreo (distractor)',cond:'pollinator',prod:'oreo',resp:'"Price/value"',demo:'M, 44, West',age:44,gender:'M',region:'West',test:'\u03C7\u00B2',p:.847,fx:'V=0.02',sig:0,pi:3,wtp:'$0.00',ec:2},
+  {id:'011',stim:'Huel (distractor)',cond:'control',prod:'huel',resp:'"Health benefits"',demo:'F, 29, NE',age:29,gender:'F',region:'Northeast',test:'\u03C7\u00B2',p:.612,fx:'V=0.03',sig:0,pi:2,wtp:'$0.00',ec:3},
+  {id:'012',stim:'Huel (distractor)',cond:'bee',prod:'huel',resp:'"Nutritional content"',demo:'M, 33, Midwest',age:33,gender:'M',region:'Midwest',test:'\u03C7\u00B2',p:.612,fx:'V=0.03',sig:0,pi:2,wtp:'$0.00',ec:2},
+  {id:'013',stim:'Huel (distractor)',cond:'pollinator',prod:'huel',resp:'"Health benefits"',demo:'F, 38, South',age:38,gender:'F',region:'South',test:'\u03C7\u00B2',p:.612,fx:'V=0.03',sig:0,pi:3,wtp:'$0.00',ec:3},
+  {id:'014',stim:'Blueberries + bee seal',cond:'bee',prod:'blueberries',resp:'"Impact on animals"',demo:'M, 61, NE',age:61,gender:'M',region:'Northeast',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.50 more',ec:5},
+  {id:'015',stim:'Blueberries + no seal',cond:'control',prod:'blueberries',resp:'"Freshness"',demo:'F, 22, West',age:22,gender:'F',region:'West',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.00',ec:2},
+  {id:'016',stim:'Blueberries + pollinator',cond:'pollinator',prod:'blueberries',resp:'"Impact on animals"',demo:'M, 48, South',age:48,gender:'M',region:'South',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:5,wtp:'$1.00 more',ec:5},
+  {id:'017',stim:'Blueberries + bee seal',cond:'bee',prod:'blueberries',resp:'"Environmental impact"',demo:'F, 55, Midwest',age:55,gender:'F',region:'Midwest',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:4,wtp:'$0.75 more',ec:4},
+  {id:'018',stim:'Blueberries + no seal',cond:'control',prod:'blueberries',resp:'"Health benefits"',demo:'M, 40, NE',age:40,gender:'M',region:'Northeast',test:'\u03C7\u00B2',p:.018,fx:'V=0.08',sig:1,pi:3,wtp:'$0.00',ec:3},
+  {id:'019',stim:'Oreo (distractor)',cond:'control',prod:'oreo',resp:'"Brand reputation"',demo:'F, 35, West',age:35,gender:'F',region:'West',test:'\u03C7\u00B2',p:.847,fx:'V=0.02',sig:0,pi:4,wtp:'$0.00',ec:1},
+  {id:'020',stim:'Huel (distractor)',cond:'pollinator',prod:'huel',resp:'"Convenience"',demo:'M, 27, South',age:27,gender:'M',region:'South',test:'\u03C7\u00B2',p:.612,fx:'V=0.03',sig:0,pi:2,wtp:'$0.00',ec:2},
+];
+const T=[
+  {name:'Unprompted: "Impact on animals"',prod:'Blueberries',test:'\u03C7\u00B2 independence',stat:'\u03C7\u00B2(2)=8.03',p:'0.018',fx:"Cramer's V=0.08",sig:1,note:'Treatment groups selected "Impact on animals" at higher rates'},
+  {name:'Unprompted (full distribution)',prod:'Blueberries',test:'\u03C7\u00B2 independence',stat:'\u03C7\u00B2(12)=21.4',p:'0.044',fx:"Cramer's V=0.11",sig:1,note:'Overall distribution differs across conditions'},
+  {name:'Wildlife protection concern',prod:'Blueberries',test:'Mann-Whitney U',stat:'U=34,218',p:'0.031',fx:'r=0.07',sig:1,note:'Higher wildlife concern in treatment groups'},
+  {name:'Purchase intent',prod:'Blueberries',test:'Mann-Whitney U',stat:'U=38,412',p:'0.142',fx:'r=0.05',sig:0,note:'No significant difference'},
+  {name:'Willingness to pay',prod:'Blueberries',test:'Mann-Whitney U',stat:'U=35,891',p:'0.067',fx:'r=0.06',sig:0,note:'Marginal trend'},
+  {name:'Unprompted associations',prod:'Oreo',test:'\u03C7\u00B2 independence',stat:'\u03C7\u00B2(10)=5.12',p:'0.847',fx:"Cramer's V=0.02",sig:0,note:'Distractor: no difference'},
+  {name:'Unprompted associations',prod:'Huel',test:'\u03C7\u00B2 independence',stat:'\u03C7\u00B2(8)=6.31',p:'0.612',fx:"Cramer's V=0.03",sig:0,note:'Distractor: no difference'},
+  {name:'Bee vs Pollinator seal',prod:'Blueberries',test:'\u03C7\u00B2 independence',stat:'\u03C7\u00B2(6)=4.82',p:'0.567',fx:"Cramer's V=0.07",sig:0,note:'No difference between variants'},
+];
+const S=[
+  {name:'Blueberries (control)',desc:'No certification seal.',emoji:'\uD83E\uDED0',cond:'Control'},
+  {name:'Blueberries + bee seal',desc:'Insecticide-free bee seal.',emoji:'\uD83D\uDC1D',cond:'Treatment A'},
+  {name:'Blueberries + pollinator',desc:'Pollinator-protector seal.',emoji:'\uD83E\uDD8B',cond:'Treatment B'},
+  {name:'Oreo cookies',desc:'Distractor. Same questions.',emoji:'\uD83C\uDF6A',cond:'Distractor'},
+  {name:'Huel shake',desc:'Distractor. Same questions.',emoji:'\uD83E\uDD64',cond:'Distractor'},
+];
+
+const table=document.getElementById('resp-view'),detail=document.getElementById('detail');
+let activeRow=null,filt={condition:'all',product:'all'};
+function bg(c){return{control:'b-ctrl',bee:'b-bee',pollinator:'b-poll'}[c]||'b-dist'}
+function bl(c){return{control:'CTRL',bee:'BEE',pollinator:'POLL'}[c]||'DIST'}
+function renderRows(d){
+  table.querySelectorAll('.ex-row:not(.hd),.ex-more').forEach(r=>r.remove());
+  d.forEach(r=>{const el=document.createElement('div');el.className='ex-row';
+    el.innerHTML=`<div class="ex-c c-id">${r.id}</div><div class="ex-c c-stim"><span class="badge ${bg(r.cond)}">${bl(r.cond)}</span>&nbsp;${r.stim}</div><div class="ex-c c-resp">${r.resp}</div><div class="ex-c c-demo">${r.demo}</div><div class="ex-c c-test">${r.test}</div><div class="ex-c c-p ${r.sig?'c-sig':'c-ns'}">${r.p.toFixed(3)}</div><div class="ex-c c-fx">${r.fx}</div>`;
+    el.onclick=()=>showD(r,el);table.appendChild(el);});
+  const m=document.createElement('div');m.className='ex-more';
+  m.innerHTML=`${(1027-d.length).toLocaleString()} more &middot; <a href="https://osf.io/73njw/" target="_blank">Full dataset on OSF &rarr;</a>`;
+  table.appendChild(m);
+}
+function showD(r,el){
+  if(activeRow)activeRow.classList.remove('on');el.classList.add('on');activeRow=el;
+  document.getElementById('d-title').textContent='Response #'+r.id;
+  document.getElementById('d-grid').innerHTML=
+    [['Stimulus',r.stim],['Condition',r.cond],['Unprompted',r.resp],['Gender',r.gender,'m'],['Age',r.age,'m'],['Region',r.region],['Purchase Intent',r.pi+'/5','m'],['WTP',r.wtp,'m'],['Env Concern',r.ec+'/5','m'],['Test',r.test+', p='+r.p.toFixed(3),'m'],['Effect',r.fx,'m'],['Significant',r.sig?'Yes':'No']].map(f=>`<div class="ex-field"><div class="ex-field-label">${f[0]}</div><div class="ex-field-val${f[2]?' m':''}" ${f[0]==='Significant'?'style="color:'+(r.sig?'var(--teal)':'var(--text-3)')+'"':''}>${f[1]}</div></div>`).join('');
+  detail.classList.add('open');
+}
+function renderT(){document.getElementById('tests-view').innerHTML=T.map(t=>`<div class="t-card"><div class="t-card-top"><div class="t-card-name">${t.name}</div><span class="t-badge ${t.sig?'t-sig':'t-nsig'}">${t.sig?'Sig':'NS'}</span></div><div class="t-card-body">${[['Product',t.prod],['Test',t.test],['Statistic',t.stat],['p',t.p],['Effect',t.fx],['Note',t.note]].map(r=>`<div class="t-row"><span class="t-label">${r[0]}</span><span class="t-val" ${r[0]==='p'?'style="color:'+(t.sig?'var(--teal)':'var(--text-3)')+'"':''}${r[0]==='Note'?'style="font-family:var(--sans);color:var(--text-2)"':''}>${r[1]}</span></div>`).join('')}</div></div>`).join('')}
+function renderS(){document.getElementById('stim-view').innerHTML=`<div class="stim-grid">${S.map(s=>`<div class="stim-card"><div class="stim-img">${s.emoji}</div><div class="stim-info"><div class="stim-name">${s.name}</div><div class="stim-desc">${s.desc}</div></div></div>`).join('')}</div>`}
+
+document.querySelectorAll('.ex-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.ex-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const v=b.dataset.view;document.getElementById('resp-view').style.display=v==='responses'?'':'none';document.getElementById('tests-view').classList.toggle('active',v==='tests');document.getElementById('stim-view').classList.toggle('active',v==='stimuli');detail.classList.remove('open')});
+document.querySelectorAll('.ex-filt[data-condition]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.ex-filt[data-condition]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filt.condition=b.dataset.condition;applyF()});
+document.querySelectorAll('.ex-filt[data-product]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.ex-filt[data-product]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filt.product=b.dataset.product;applyF()});
+function applyF(){let f=D;if(filt.condition!=='all')f=f.filter(r=>r.cond===filt.condition);if(filt.product!=='all')f=f.filter(r=>r.prod===filt.product);detail.classList.remove('open');renderRows(f)}
+document.getElementById('search').oninput=e=>{const q=e.target.value.toLowerCase();let f=D.filter(r=>r.stim.toLowerCase().includes(q)||r.resp.toLowerCase().includes(q)||r.demo.toLowerCase().includes(q));if(filt.condition!=='all')f=f.filter(r=>r.cond===filt.condition);if(filt.product!=='all')f=f.filter(r=>r.prod===filt.product);renderRows(f)};
+document.getElementById('d-close').onclick=()=>{detail.classList.remove('open');if(activeRow)activeRow.classList.remove('on');activeRow=null};
+
+renderRows(D);renderT();renderS();
+const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')}),{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+window.onscroll=()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>30);
+function copyI(){navigator.clipboard.writeText('git clone https://github.com/manintheandes/tenor ~/.claude/skills/tenor');const b=document.querySelector('.cp-btn');b.textContent='Copied';setTimeout(()=>b.textContent='Copy',2e3)}
+</script>
+
+</body>
+</html>
